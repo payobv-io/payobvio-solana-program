@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Fu4phdrbvax4SPaQPBcurJFX6YtiqrJLzgh6ryacnwpJ");
+declare_id!("B5b4eCT9ytKCAHsFcZomiWeL1Q4mJPvLTheM4is1PBt5");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -19,6 +19,16 @@ pub mod payobvio_solana_program {
         escrow_account.state = EscrowState::Initialized;
         Ok(())
     }
+
+    pub fn close_escrow(ctx: Context<CloseEscrow>) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
+    
+        require!(
+            escrow_account.state == EscrowState::Initialized,
+            // EscrowError::InvalidEscrowState
+        );
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -35,6 +45,18 @@ pub struct InitializeEscrow<'info> {
     )]
     pub escrow_account: Account<'info, EscrowAccount>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CloseEscrow<'info> {
+    #[account(mut)]
+    pub maintainer: Signer<'info>,
+    #[account(
+        mut,
+        close = maintainer,
+        constraint = escrow_account.maintainer == maintainer.key(),
+    )]
+    pub escrow_account: Account<'info, EscrowAccount>,
 }
 
 #[account]
