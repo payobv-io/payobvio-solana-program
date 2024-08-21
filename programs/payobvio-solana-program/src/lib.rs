@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("B5b4eCT9ytKCAHsFcZomiWeL1Q4mJPvLTheM4is1PBt5");
+declare_id!("4bq5yNyzhykT3zTFTwLHZqU3U6n1kv3ko6vvB455TrcA");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -25,7 +25,7 @@ pub mod payobvio_solana_program {
     
         require!(
             escrow_account.state == EscrowState::Initialized,
-            // EscrowError::InvalidEscrowState
+            EscrowError::InvalidEscrowState
         );
         Ok(())
     }
@@ -75,4 +75,14 @@ pub enum EscrowState {
     Assigned,
     Completed,
     Refunded,
+}
+
+#[error_code]
+pub enum EscrowError {
+    #[msg("The escrow is not in the correct state for this operation")]
+    InvalidEscrowState,
+    #[msg("The deposit amount does not match the bounty amount")]
+    InvalidDepositAmount,
+    #[msg("The contributor does not match the assigned contributor")]
+    InvalidContributor,
 }
