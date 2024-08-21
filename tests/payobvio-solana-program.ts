@@ -77,4 +77,26 @@ describe("payobvio-solana-program", () => {
       throw err;
     }
   });
+
+  it("Deposits funds into the escrow account", async () => {
+    try {
+      const tx = await program.methods
+        .depositFunds(new BN(bountyAmount))
+        .accounts({
+          maintainer: maintainer,
+          escrowAccount: escrowAccount,
+          systemProgram: SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      console.log("Your transaction signature", tx);
+      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
+      console.log("Escrow account details after funding:", escrow);
+      expect(escrow.amount.toNumber()).to.equal(bountyAmount);
+      console.log("Funds deposited successfully");
+    } catch (err) {
+      console.error("Error depositing funds:", err);
+      throw err;
+    }
+  });
 });
