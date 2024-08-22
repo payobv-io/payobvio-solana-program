@@ -1,7 +1,12 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 
-declare_id!("2UQB2wFJ8tGAMigyyKagSPov9617Kc6EDmTiFmov7Er2");
+pub mod error;
+pub mod states;
+pub mod structs;
+use crate::{error::*, states::*, structs::*};
+
+declare_id!("AMWRAy4FUbehBPnFjqDn3uMEegEybVFJGGCbQxpjeWtp");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -113,110 +118,4 @@ pub mod payobvio_solana_program {
         escrow_account.state = EscrowState::Refunded;
         Ok(())
     }
-}
-
-#[derive(Accounts)]
-#[instruction(bounty_amount: u64, issue_id: String)]
-pub struct InitializeEscrow<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        init,
-        payer = maintainer,
-        space = 8 + 32 + 32 + 8 + 32 + 1 + issue_id.len(),
-        seeds = [b"escrow", issue_id.as_bytes()],
-        bump
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct CloseEscrow<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        mut,
-        close = maintainer,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-}
-
-#[derive(Accounts)]
-pub struct DepositFunds<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        mut,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct AssignContributor<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        mut,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-}
-
-#[derive(Accounts)]
-pub struct ReleaseFunds<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(mut)]
-    /// CHECK: This is safe because we're checking the pubkey in the instruction
-    pub contributor: AccountInfo<'info>,
-    #[account(
-        mut,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct Refund<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        mut,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-    pub system_program: Program<'info, System>,
-}
-
-#[account]
-pub struct EscrowAccount {
-    pub maintainer: Pubkey,
-    pub contributor: Pubkey,
-    pub amount: u64,
-    pub issue_id: String,
-    pub state: EscrowState,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
-pub enum EscrowState {
-    Initialized,
-    Funded,
-    Assigned,
-    Completed,
-    Refunded,
-}
-
-#[error_code]
-pub enum EscrowError {
-    #[msg("The escrow is not in the correct state for this operation")]
-    InvalidEscrowState,
-    #[msg("The deposit amount does not match the bounty amount")]
-    InvalidDepositAmount,
-    #[msg("The contributor does not match the assigned contributor")]
-    InvalidContributor,
 }
