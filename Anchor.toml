@@ -5,13 +5,13 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-payobvio_solana_program = "FQvAzGRC6eSDaa1GvuXRDnbBxAxCT8WhwLsj8psnWxSk"
+payobvio_solana_program = "AMWRAy4FUbehBPnFjqDn3uMEegEybVFJGGCbQxpjeWtp"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
