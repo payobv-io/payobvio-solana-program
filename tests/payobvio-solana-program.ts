@@ -146,4 +146,24 @@ describe("payobvio-solana-program", () => {
       throw err;
     }
   });
+
+  it("Refunds funds to the maintainer", async () => {
+    try {
+      const tx = await program.methods
+        .refund()
+        .accounts({
+          maintainer: maintainer,
+          escrowAccount: escrowAccount,
+          systemProgram: SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      console.log("Funds refunded, transaction signature", tx);
+      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
+      console.log("Escrow account details after refunding funds:", escrow);
+    } catch (err) {
+      console.error("Error refunding funds:", err);
+      throw err;
+    }
+  });
 });

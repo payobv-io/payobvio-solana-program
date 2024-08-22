@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 
-declare_id!("DonZJdwWoKHey7iQoskXvbMYJ1xcepzoWTogFnWm4hyE");
+declare_id!("2UQB2wFJ8tGAMigyyKagSPov9617Kc6EDmTiFmov7Er2");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -96,6 +96,23 @@ pub mod payobvio_solana_program {
         escrow_account.state = EscrowState::Completed;
         Ok(())
     }
+
+    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
+        let maintainer = &ctx.accounts.maintainer;
+
+        require!(
+            escrow_account.state == EscrowState::Funded
+                || escrow_account.state == EscrowState::Assigned,
+            EscrowError::InvalidEscrowState
+        );
+
+        **escrow_account.to_account_info().try_borrow_mut_lamports()? -= escrow_account.amount;
+        **maintainer.to_account_info().try_borrow_mut_lamports()? += escrow_account.amount;
+
+        escrow_account.state = EscrowState::Refunded;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -156,6 +173,18 @@ pub struct ReleaseFunds<'info> {
     #[account(mut)]
     /// CHECK: This is safe because we're checking the pubkey in the instruction
     pub contributor: AccountInfo<'info>,
+    #[account(
+        mut,
+        constraint = escrow_account.maintainer == maintainer.key(),
+    )]
+    pub escrow_account: Account<'info, EscrowAccount>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Refund<'info> {
+    #[account(mut)]
+    pub maintainer: Signer<'info>,
     #[account(
         mut,
         constraint = escrow_account.maintainer == maintainer.key(),
