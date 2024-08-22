@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 
-declare_id!("5iH8QnHLKvzBvePZNzwyTFQjA5YqqeLy2RWLzbTaivZL");
+declare_id!("2UTUtwQRttcgaVzUZYy26o8P6EKmSZDmKoGvgvetYvPG");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -62,6 +62,22 @@ pub mod payobvio_solana_program {
         escrow_account.state = EscrowState::Funded;
         Ok(())
     }
+
+    pub fn assign_contributor(
+        ctx: Context<AssignContributor>,
+        contributor: Pubkey,
+    ) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
+        
+        require!(
+            escrow_account.state == EscrowState::Funded,
+            EscrowError::InvalidEscrowState
+        );
+
+        escrow_account.contributor = contributor;
+        escrow_account.state = EscrowState::Assigned;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -102,6 +118,17 @@ pub struct DepositFunds<'info> {
     )]
     pub escrow_account: Account<'info, EscrowAccount>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AssignContributor<'info> {
+    #[account(mut)]
+    pub maintainer: Signer<'info>,
+    #[account(
+        mut,
+        constraint = escrow_account.maintainer == maintainer.key(),
+    )]
+    pub escrow_account: Account<'info, EscrowAccount>,
 }
 
 #[account]

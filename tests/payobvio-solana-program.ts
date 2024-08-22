@@ -67,11 +67,11 @@ describe("payobvio-solana-program", () => {
         .rpc();
 
       console.log("Your transaction signature", tx);
-      const account = await program.account.escrowAccount.fetch(escrowAccount);
-      console.log("Escrow account details:", account);
-      expect(account.maintainer.toBase58()).to.equal(maintainer.toBase58());
-      expect(account.amount.toNumber()).to.equal(bountyAmount);
-      expect(account.issueId).to.equal(issueId);
+      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
+      console.log("Escrow account details:", escrow);
+      expect(escrow.maintainer.toBase58()).to.equal(maintainer.toBase58());
+      expect(escrow.amount.toNumber()).to.equal(bountyAmount);
+      expect(escrow.issueId).to.equal(issueId);
     } catch (err) {
       console.error("Unexpected error:", err);
       throw err;
@@ -96,6 +96,33 @@ describe("payobvio-solana-program", () => {
       console.log("Funds deposited successfully");
     } catch (err) {
       console.error("Error depositing funds:", err);
+      throw err;
+    }
+  });
+
+  it("Assigns a contributor to the escrow account", async () => {
+    const contributor = new PublicKey(
+      "HxkxFjzVTfAwgcqHS9SHmVsywG33T8itm6YXpaSsTThR"
+    );
+
+    try {
+      const tx = await program.methods
+        .assignContributor(contributor)
+        .accounts({
+          maintainer: maintainer,
+          escrowAccount: escrowAccount,
+        } as any)
+        .rpc();
+
+      console.log("Contributor assigned, transaction signature", tx);
+      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
+      console.log(
+        "Escrow account details after assigning the contributor:",
+        escrow
+      );
+      expect(escrow.contributor.toString()).to.equal(contributor.toString());
+    } catch (err) {
+      console.error("Error assigning contributor:", err);
       throw err;
     }
   });
