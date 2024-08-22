@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-payobvio_solana_program = "2UTUtwQRttcgaVzUZYy26o8P6EKmSZDmKoGvgvetYvPG"
+payobvio_solana_program = "DonZJdwWoKHey7iQoskXvbMYJ1xcepzoWTogFnWm4hyE"
 
 [registry]
 url = "https://api.apr.dev"

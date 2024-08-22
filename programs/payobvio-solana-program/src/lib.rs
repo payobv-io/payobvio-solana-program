@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 
-declare_id!("2UTUtwQRttcgaVzUZYy26o8P6EKmSZDmKoGvgvetYvPG");
+declare_id!("DonZJdwWoKHey7iQoskXvbMYJ1xcepzoWTogFnWm4hyE");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -23,7 +23,7 @@ pub mod payobvio_solana_program {
 
     pub fn close_escrow(ctx: Context<CloseEscrow>) -> Result<()> {
         let escrow_account = &mut ctx.accounts.escrow_account;
-    
+
         require!(
             escrow_account.state == EscrowState::Funded,
             EscrowError::InvalidEscrowState
@@ -63,12 +63,9 @@ pub mod payobvio_solana_program {
         Ok(())
     }
 
-    pub fn assign_contributor(
-        ctx: Context<AssignContributor>,
-        contributor: Pubkey,
-    ) -> Result<()> {
+    pub fn assign_contributor(ctx: Context<AssignContributor>, contributor: Pubkey) -> Result<()> {
         let escrow_account = &mut ctx.accounts.escrow_account;
-        
+
         require!(
             escrow_account.state == EscrowState::Funded,
             EscrowError::InvalidEscrowState
@@ -76,6 +73,27 @@ pub mod payobvio_solana_program {
 
         escrow_account.contributor = contributor;
         escrow_account.state = EscrowState::Assigned;
+        Ok(())
+    }
+
+    pub fn release_funds(ctx: Context<ReleaseFunds>) -> Result<()> {
+        let escrow_account = &mut ctx.accounts.escrow_account;
+        let contributor = &ctx.accounts.contributor;
+
+        require!(
+            escrow_account.state == EscrowState::Assigned,
+            EscrowError::InvalidEscrowState
+        );
+
+        require!(
+            contributor.key() == escrow_account.contributor,
+            EscrowError::InvalidContributor
+        );
+
+        **escrow_account.to_account_info().try_borrow_mut_lamports()? -= escrow_account.amount;
+        **contributor.to_account_info().try_borrow_mut_lamports()? += escrow_account.amount;
+
+        escrow_account.state = EscrowState::Completed;
         Ok(())
     }
 }
@@ -129,6 +147,21 @@ pub struct AssignContributor<'info> {
         constraint = escrow_account.maintainer == maintainer.key(),
     )]
     pub escrow_account: Account<'info, EscrowAccount>,
+}
+
+#[derive(Accounts)]
+pub struct ReleaseFunds<'info> {
+    #[account(mut)]
+    pub maintainer: Signer<'info>,
+    #[account(mut)]
+    /// CHECK: This is safe because we're checking the pubkey in the instruction
+    pub contributor: AccountInfo<'info>,
+    #[account(
+        mut,
+        constraint = escrow_account.maintainer == maintainer.key(),
+    )]
+    pub escrow_account: Account<'info, EscrowAccount>,
+    pub system_program: Program<'info, System>,
 }
 
 #[account]

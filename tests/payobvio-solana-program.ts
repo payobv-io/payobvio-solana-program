@@ -20,6 +20,9 @@ describe("payobvio-solana-program", () => {
     [Buffer.from("escrow"), Buffer.from(issueId)],
     program.programId
   );
+  const contributor = new PublicKey(
+    "HxkxFjzVTfAwgcqHS9SHmVsywG33T8itm6YXpaSsTThR"
+  );
 
   const closeEscrowAccount = async () => {
     try {
@@ -101,10 +104,6 @@ describe("payobvio-solana-program", () => {
   });
 
   it("Assigns a contributor to the escrow account", async () => {
-    const contributor = new PublicKey(
-      "HxkxFjzVTfAwgcqHS9SHmVsywG33T8itm6YXpaSsTThR"
-    );
-
     try {
       const tx = await program.methods
         .assignContributor(contributor)
@@ -123,6 +122,27 @@ describe("payobvio-solana-program", () => {
       expect(escrow.contributor.toString()).to.equal(contributor.toString());
     } catch (err) {
       console.error("Error assigning contributor:", err);
+      throw err;
+    }
+  });
+
+  it("Releases funds to the contributor", async () => {
+    try {
+      const tx = await program.methods
+        .releaseFunds()
+        .accounts({
+          maintainer: maintainer,
+          contributor: contributor,
+          escrowAccount: escrowAccount,
+          systemProgram: SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      console.log("Funds released, transaction signature", tx);
+      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
+      console.log("Escrow account details after releasing funds:", escrow);
+    } catch (err) {
+      console.error("Error releasing funds:", err);
       throw err;
     }
   });
