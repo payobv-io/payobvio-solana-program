@@ -6,7 +6,7 @@ pub mod states;
 pub mod structs;
 use crate::{error::*, states::*, structs::*};
 
-declare_id!("AMWRAy4FUbehBPnFjqDn3uMEegEybVFJGGCbQxpjeWtp");
+declare_id!("Bo9Nd6FuheXnZoPx19s4uWwSjuLct3nHnZ7ZjrKdSUGS");
 
 #[program]
 pub mod payobvio_solana_program {
