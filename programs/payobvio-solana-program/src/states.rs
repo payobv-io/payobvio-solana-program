@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 pub enum EscrowState {
     Initialized,
     Funded,
-    Assigned,
     Completed,
     Refunded,
 }

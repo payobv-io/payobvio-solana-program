@@ -10,7 +10,7 @@ pub struct InitializeEscrow<'info> {
     #[account(
         init,
         payer = maintainer,
-        space = 8 + 32 + 32 + 8 + 32 + 1 + issue_id.len(),
+        space = 8 + 32 + 8 + 32 + 1 + issue_id.len(),
         seeds = [b"escrow", issue_id.as_bytes()],
         bump
     )]
@@ -43,22 +43,11 @@ pub struct DepositFunds<'info> {
 }
 
 #[derive(Accounts)]
-pub struct AssignContributor<'info> {
-    #[account(mut)]
-    pub maintainer: Signer<'info>,
-    #[account(
-        mut,
-        constraint = escrow_account.maintainer == maintainer.key(),
-    )]
-    pub escrow_account: Account<'info, EscrowAccount>,
-}
-
-#[derive(Accounts)]
 pub struct ReleaseFunds<'info> {
     #[account(mut)]
     pub maintainer: Signer<'info>,
     #[account(mut)]
-    /// CHECK: This is safe because we're checking the pubkey in the instruction
+    /// CHECK: This account is not read or written in the instruction, just receives funds
     pub contributor: AccountInfo<'info>,
     #[account(
         mut,
@@ -83,7 +72,6 @@ pub struct Refund<'info> {
 #[account]
 pub struct EscrowAccount {
     pub maintainer: Pubkey,
-    pub contributor: Pubkey,
     pub amount: u64,
     pub issue_id: String,
     pub state: EscrowState,

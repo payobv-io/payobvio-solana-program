@@ -6,6 +6,4 @@ pub enum EscrowError {
     InvalidEscrowState,
     #[msg("The deposit amount does not match the bounty amount")]
     InvalidDepositAmount,
-    #[msg("The contributor does not match the assigned contributor")]
-    InvalidContributor,
 }

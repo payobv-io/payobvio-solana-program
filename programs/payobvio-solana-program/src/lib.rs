@@ -6,7 +6,7 @@ pub mod states;
 pub mod structs;
 use crate::{error::*, states::*, structs::*};
 
-declare_id!("Bo9Nd6FuheXnZoPx19s4uWwSjuLct3nHnZ7ZjrKdSUGS");
+declare_id!("3wDr7MnhhEKuuPD7jurhfpSpUW53ictFKgFH1mLu9zJu");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -21,7 +21,6 @@ pub mod payobvio_solana_program {
         escrow_account.maintainer = ctx.accounts.maintainer.key();
         escrow_account.amount = bounty_amount;
         escrow_account.issue_id = issue_id;
-        escrow_account.contributor = Pubkey::default();
         escrow_account.state = EscrowState::Initialized;
         Ok(())
     }
@@ -67,32 +66,13 @@ pub mod payobvio_solana_program {
         escrow_account.state = EscrowState::Funded;
         Ok(())
     }
-
-    pub fn assign_contributor(ctx: Context<AssignContributor>, contributor: Pubkey) -> Result<()> {
-        let escrow_account = &mut ctx.accounts.escrow_account;
-
-        require!(
-            escrow_account.state == EscrowState::Funded,
-            EscrowError::InvalidEscrowState
-        );
-
-        escrow_account.contributor = contributor;
-        escrow_account.state = EscrowState::Assigned;
-        Ok(())
-    }
-
     pub fn release_funds(ctx: Context<ReleaseFunds>) -> Result<()> {
         let escrow_account = &mut ctx.accounts.escrow_account;
         let contributor = &ctx.accounts.contributor;
 
         require!(
-            escrow_account.state == EscrowState::Assigned,
+            escrow_account.state == EscrowState::Funded,
             EscrowError::InvalidEscrowState
-        );
-
-        require!(
-            contributor.key() == escrow_account.contributor,
-            EscrowError::InvalidContributor
         );
 
         **escrow_account.to_account_info().try_borrow_mut_lamports()? -= escrow_account.amount;
@@ -107,8 +87,7 @@ pub mod payobvio_solana_program {
         let maintainer = &ctx.accounts.maintainer;
 
         require!(
-            escrow_account.state == EscrowState::Funded
-                || escrow_account.state == EscrowState::Assigned,
+            escrow_account.state == EscrowState::Funded,
             EscrowError::InvalidEscrowState
         );
 
