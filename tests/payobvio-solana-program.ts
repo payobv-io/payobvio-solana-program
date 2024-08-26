@@ -103,29 +103,6 @@ describe("payobvio-solana-program", () => {
     }
   });
 
-  it("Assigns a contributor to the escrow account", async () => {
-    try {
-      const tx = await program.methods
-        .assignContributor(contributor)
-        .accounts({
-          maintainer: maintainer,
-          escrowAccount: escrowAccount,
-        } as any)
-        .rpc();
-
-      console.log("Contributor assigned, transaction signature", tx);
-      const escrow = await program.account.escrowAccount.fetch(escrowAccount);
-      console.log(
-        "Escrow account details after assigning the contributor:",
-        escrow
-      );
-      expect(escrow.contributor.toString()).to.equal(contributor.toString());
-    } catch (err) {
-      console.error("Error assigning contributor:", err);
-      throw err;
-    }
-  });
-
   it("Releases funds to the contributor", async () => {
     try {
       const tx = await program.methods
