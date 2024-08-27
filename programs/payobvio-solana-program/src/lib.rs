@@ -6,7 +6,7 @@ pub mod states;
 pub mod structs;
 use crate::{error::*, states::*, structs::*};
 
-declare_id!("3wDr7MnhhEKuuPD7jurhfpSpUW53ictFKgFH1mLu9zJu");
+declare_id!("FB7QEze2Xmxiw4oh1SfM2WyCwEgAY6oY27dbLPQ365HT");
 
 #[program]
 pub mod payobvio_solana_program {
@@ -28,10 +28,10 @@ pub mod payobvio_solana_program {
     pub fn close_escrow(ctx: Context<CloseEscrow>) -> Result<()> {
         let escrow_account = &mut ctx.accounts.escrow_account;
 
-        require!(
-            escrow_account.state == EscrowState::Funded,
-            EscrowError::InvalidEscrowState
-        );
+        // require!(
+        //     escrow_account.state == EscrowState::Funded,
+        //     EscrowError::InvalidEscrowState
+        // );
 
         Ok(())
     }
